@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>bom-a</artifactId>
+    <groupId>org.kie</groupId>
+    <version>1.0</version>
+    <relativePath>../bom-a</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>bom-aa</artifactId>
+
+  <properties>
+    <version.commons-io>2.5</version.commons-io>
+  </properties>
+
+
+</project>
