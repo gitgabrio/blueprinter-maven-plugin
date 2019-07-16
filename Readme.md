@@ -5,4 +5,8 @@ Scope of this plugin is to implement print overall maven project architecture in
 
 Some sample of generated diagrams
 
-![alt text](https://raw.githubusercontent.com/username/projectname/branch/path/to/img.png)
+![alt text](https://github.com/gitgabrio/blueprinter-maven-plugin/blob/master/blueprintertest.png)
+
+![alt text](https://github.com/gitgabrio/blueprinter-maven-plugin/blob/master/boma.png)
+
+![alt text](https://github.com/gitgabrio/blueprinter-maven-plugin/blob/master/bomaa.png)
