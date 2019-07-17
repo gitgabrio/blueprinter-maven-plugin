@@ -11,6 +11,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>bom-bb</artifactId>
+  <packaging>pom</packaging>
 
   <properties>
     <version.commons-beanutils>1.9.3</version.commons-beanutils>

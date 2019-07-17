@@ -22,11 +22,15 @@
         <groupId>org.kie</groupId>
         <artifactId>bom-ba</artifactId>
         <version>${version.project}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
         <artifactId>bom-bb</artifactId>
         <version>${version.project}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
