@@ -15,7 +15,6 @@
  */
 package org.kie.maven.blueprinter.plugin
 
-import org.apache.maven.artifact.Artifact
 import org.apache.maven.model.Dependency
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
@@ -39,7 +38,7 @@ open class PrintMojo : AbstractMojo() {
     private val project: MavenProject? = null
 
     /**
-     * Additional resource directories.
+     * Generated scheme file name
      */
     @Parameter(required = false, defaultValue = "scheme.puml")
     private var fileName: String = "scheme.puml"
@@ -106,6 +105,7 @@ open class PrintMojo : AbstractMojo() {
         collectedProjects.addAll(mavenProject.collectedProjects)
         collectedProjects.add(mavenProject)
         File(fileName).writeText("@startuml")
+        File(fileName).appendText("\r\nleft to right direction")
         started = true
     }
 
