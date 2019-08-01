@@ -15,42 +15,41 @@
  */
 package org.kie.maven.blueprinter.plugin
 
-import org.apache.maven.model.Dependency
+import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
-import org.apache.maven.plugins.annotations.InstantiationStrategy
-import org.apache.maven.plugins.annotations.LifecyclePhase
-import org.apache.maven.plugins.annotations.Mojo
-import org.apache.maven.plugins.annotations.Parameter
+import org.apache.maven.plugin.logging.Log
+import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
-import java.io.File
-import java.util.function.Consumer
+import org.apache.maven.project.ProjectBuilder
+import org.apache.maven.repository.RepositorySystem
+
 
 /**
- * Check and print out the **GWT** inheritance tree.
+ * Check and print out the overall MAVEN relationship
  */
 @Mojo(name = "print", defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true, instantiationStrategy = InstantiationStrategy.SINGLETON)
 open class PrintMojo : AbstractMojo() {
 
 
     @Parameter(readonly = true, defaultValue = "\${project}")
-    private val project: MavenProject? = null
+    private lateinit var project: MavenProject
 
     /**
      * Generated scheme file name
      */
-    @Parameter(required = false, defaultValue = "scheme.puml")
-    private var fileName: String = "scheme.puml"
+    @Parameter(required = false, defaultValue = "scheme")
+    private var fileName: String = "scheme"
 
+    @Parameter(defaultValue = "\${session}", readonly = true, required = true)
+    private lateinit var session: MavenSession
 
-    private fun mavenProjectString(mavenProject: MavenProject): String = "${mavenProject.groupId}:${mavenProject.artifactId}"
-    private fun dependencyString(dependency: Dependency): String = "${dependency.groupId}:${dependency.artifactId}"
+    @Component
+    private lateinit var repositorySystem: RepositorySystem
 
-    private fun logMavenProject(mavenProject: MavenProject, relation: RELATION) = log.debug("$relation: ${mavenProjectString(mavenProject)}:${mavenProject.version}")
-    private fun logDependency(dependency: Dependency, relation: RELATION) = log.debug("$relation: ${dependencyString(dependency)}:${dependency.version}")
-
-    private fun addComponentToFile(component: String, fileName: String) = File(fileName).appendText("\r\n[$component]")
+    @Component
+    private lateinit var mavenProjectBuilder: ProjectBuilder
 
     enum class RELATION {
         PARENT,
@@ -58,41 +57,27 @@ open class PrintMojo : AbstractMojo() {
         CHILD
     }
 
-    private val relationshipSet = HashSet<Relationship>()
+    private val targetProjectRelationshipSet = HashSet<Relationship>()
     private val projectToBuild = ArrayList<MavenProject>()
-    private val collectedProjects = ArrayList<MavenProject>()
+    private val targetProjectCollectedProjects = ArrayList<MavenProject>()
     private var started = false
 
 
     @Throws(MojoExecutionException::class, MojoFailureException::class)
     override fun execute() {
         log.debug("Executing PrintMojo on instance $this")
-        project?.let {
+        project.let {
             if (!started) {
                 init(it)
+                initFile(fileName, log)
+                started = true
             }
-            val currentComponent = mavenProjectString(it)
-            addComponentToFile(currentComponent, fileName)
-            it.parent?.let { innerIt ->
-                if (!collectedProjects.contains(innerIt)) {
-                    addMavenProjectRelationship(innerIt, RELATION.PARENT, currentComponent)
-                }
-            }
-            it.originalModel?.let { innerIt ->
-                innerIt.dependencyManagement?.dependencies?.filter { subInnerIt -> subInnerIt.scope == "import" }?.forEach(Consumer { subInnerIt ->
-                    addDependencyRelationship(subInnerIt, RELATION.IMPORT, currentComponent)
-                })
-            }
-            it.collectedProjects
-                    .filter { innerIt -> innerIt.parent == it }
-                    .forEach(Consumer {
-                        innerIt -> addMavenProjectRelationship(innerIt, RELATION.CHILD, currentComponent)
-
-                    })
+            navigateProject(targetProjectRelationshipSet, it, fileName, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, log))
             projectToBuild.remove(it)
             if (projectToBuild.isEmpty()) {
-                writeRelationships()
-                done()
+                writeRelationships(targetProjectRelationshipSet, fileName, log)
+                done(fileName, log)
+                started = false
             }
         }
     }
@@ -101,61 +86,14 @@ open class PrintMojo : AbstractMojo() {
         log.debug("Init with ${mavenProject.name}")
         projectToBuild.clear()
         projectToBuild.addAll(mavenProject.collectedProjects)
-        collectedProjects.clear()
-        collectedProjects.addAll(mavenProject.collectedProjects)
-        collectedProjects.add(mavenProject)
-        File(fileName).writeText("@startuml")
-        File(fileName).appendText("\r\nleft to right direction")
-        started = true
-    }
-
-    private fun writeRelationships() {
-        log.debug("Write relationships ...")
-        relationshipSet
-                .map { it.currentComponent }
-                .toHashSet()
-                .forEach {
-                    log.debug("addComponentToFile $it")
-                    addComponentToFile(it, fileName)
-                }
-        relationshipSet.forEach {
-            log.debug("writeRelationship $it")
-            writeRelationship(it)
-        }
-    }
-
-    private fun done() {
-        log.debug("... done")
-        File(fileName).appendText("\r\n@enduml")
-        started = false
+        targetProjectCollectedProjects.clear()
+        targetProjectCollectedProjects.addAll(mavenProject.collectedProjects)
+        targetProjectCollectedProjects.add(mavenProject)
+//        initFile(fileName, log)
     }
 
 
-    private fun addMavenProjectRelationship(mavenProject: MavenProject, relation: RELATION, currentComponent: String) {
-        logMavenProject(mavenProject, relation)
-        val relatedComponent = mavenProjectString(mavenProject)
-        relationshipSet.add(Relationship(currentComponent, relatedComponent, relation))
-    }
-
-    private fun addDependencyRelationship(dependency: Dependency, relation: RELATION, currentComponent: String) {
-        logDependency(dependency, relation)
-        val relatedComponent = dependencyString(dependency)
-        relationshipSet.add(Relationship(currentComponent, relatedComponent, relation))
-    }
-
-    private fun writeRelationship(relationship: Relationship) {
-        when (relationship.relation) {
-            RELATION.PARENT -> {
-                File(fileName).appendText("\r\n[${relationship.relatedComponent}] <-- [${relationship.currentComponent}] : extend")
-            }
-            RELATION.CHILD -> {
-                File(fileName).appendText("\r\n[${relationship.currentComponent}] <-- [${relationship.relatedComponent}] : extend")
-            }
-            RELATION.IMPORT -> {
-                File(fileName).appendText("\r\n[${relationship.currentComponent}] ..> [${relationship.relatedComponent}] : import")
-            }
-        }
-    }
+    class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject, val targetProjectCollectedProjects: ArrayList<MavenProject>, val log: Log)
 
     class Relationship(val currentComponent: String, val relatedComponent: String, val relation: RELATION) {
 
