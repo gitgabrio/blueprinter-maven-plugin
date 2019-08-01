@@ -24,6 +24,7 @@ import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.ProjectBuilder
 import org.apache.maven.repository.RepositorySystem
+import java.io.File
 
 
 /**
@@ -31,7 +32,6 @@ import org.apache.maven.repository.RepositorySystem
  */
 @Mojo(name = "print", defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true, instantiationStrategy = InstantiationStrategy.SINGLETON)
 open class PrintMojo : AbstractMojo() {
-
 
     @Parameter(readonly = true, defaultValue = "\${project}")
     private lateinit var project: MavenProject
@@ -42,6 +42,12 @@ open class PrintMojo : AbstractMojo() {
     @Parameter(required = false, defaultValue = "scheme")
     private var fileName: String = "scheme"
 
+    /**
+     * Output directory
+     */
+    @Parameter(required = false, defaultValue = "blueprinter")
+    private var outputDirectory: String = "blueprinter"
+
     @Parameter(defaultValue = "\${session}", readonly = true, required = true)
     private lateinit var session: MavenSession
 
@@ -50,6 +56,8 @@ open class PrintMojo : AbstractMojo() {
 
     @Component
     private lateinit var mavenProjectBuilder: ProjectBuilder
+
+    private  lateinit var destination: File
 
     enum class RELATION {
         PARENT,
@@ -60,6 +68,7 @@ open class PrintMojo : AbstractMojo() {
     private val targetProjectRelationshipSet = HashSet<Relationship>()
     private val projectToBuild = ArrayList<MavenProject>()
     private val targetProjectCollectedProjects = ArrayList<MavenProject>()
+    private val generatedFiles = HashSet<File>()
     private var started = false
 
 
@@ -69,15 +78,17 @@ open class PrintMojo : AbstractMojo() {
         project.let {
             if (!started) {
                 init(it)
-                initFile(fileName, log)
+                destination = initFile(fileName, outputDirectory, generatedFiles, log)
                 started = true
             }
-            navigateProject(targetProjectRelationshipSet, it, fileName, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, log))
+            navigateProject(targetProjectRelationshipSet, it, destination, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, generatedFiles, outputDirectory, log))
             projectToBuild.remove(it)
             if (projectToBuild.isEmpty()) {
-                writeRelationships(targetProjectRelationshipSet, fileName, log)
-                done(fileName, log)
+                writeRelationships(targetProjectRelationshipSet, destination, log)
+                done(destination, log)
                 started = false
+                val svgFilesMap = createSVGFilesMap(generatedFiles)
+                createHTMLFiles(svgFilesMap)
             }
         }
     }
@@ -89,11 +100,10 @@ open class PrintMojo : AbstractMojo() {
         targetProjectCollectedProjects.clear()
         targetProjectCollectedProjects.addAll(mavenProject.collectedProjects)
         targetProjectCollectedProjects.add(mavenProject)
-//        initFile(fileName, log)
     }
 
 
-    class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject, val targetProjectCollectedProjects: ArrayList<MavenProject>, val log: Log)
+    class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject, val targetProjectCollectedProjects: ArrayList<MavenProject>, val generatedFiles: HashSet<File>, val outputDirectory: String, val log: Log)
 
     class Relationship(val currentComponent: String, val relatedComponent: String, val relation: RELATION) {
 

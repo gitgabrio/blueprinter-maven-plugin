@@ -23,33 +23,38 @@ import java.io.File
  */
 
 
-fun addComponentToFile(component: String, fileName: String) = File("$fileName.puml").appendText("\r\n[$component]")
+fun addComponentToFile(component: String, destination: File) = destination.appendText("\r\n[$component]")
 
-fun initFile(localFileName: String, log: Log) {
-    log.debug("initFile with $localFileName")
-    val actualFileName = "$localFileName.puml"
-    File(actualFileName).writeText("@startuml")
-    File(actualFileName).appendText("\r\nleft to right direction")
+fun initFile(localFileName: String, outputDirectory: String, generatedFiles: HashSet<File>, log: Log): File {
+    val actualFileName = "$outputDirectory${File.separator}$localFileName.puml"
+    log.debug("initFile $actualFileName")
+    val outputDir = File(outputDirectory)
+    if (!outputDir.exists()) {
+        outputDir.mkdir()
+    }
+    val toReturn = File(actualFileName)
+    toReturn.writeText("@startuml")
+    toReturn.appendText("\r\nleft to right direction")
+    generatedFiles.add(toReturn)
+    return toReturn
 }
 
-fun done(localFileName: String, log: Log) {
-    log.debug("... done $localFileName")
-    val actualFileName = "$localFileName.puml"
-    File(actualFileName).appendText("\r\n@enduml")
+fun done(destination: File, log: Log) {
+    log.debug("... done ${destination.absolutePath}")
+    destination.appendText("\r\n@enduml")
 }
 
-fun writeRelationship(relationship: PrintMojo.Relationship, localFileName: String, log: Log) {
-    log.debug("writeRelationship to $localFileName")
-    val actualFileName = "$localFileName.puml"
+fun writeRelationship(relationship: PrintMojo.Relationship, destination: File, log: Log) {
+    log.debug("writeRelationship to ${destination.absolutePath}")
     when (relationship.relation) {
         PrintMojo.RELATION.PARENT -> {
-            File(actualFileName).appendText("\r\n[${relationship.relatedComponent}] <-- [${relationship.currentComponent}] : extend")
+            destination.appendText("\r\n[${relationship.relatedComponent}] <-- [${relationship.currentComponent}] : extend")
         }
         PrintMojo.RELATION.CHILD -> {
-            File(actualFileName).appendText("\r\n[${relationship.currentComponent}] <-- [${relationship.relatedComponent}] : extend")
+            destination.appendText("\r\n[${relationship.currentComponent}] <-- [${relationship.relatedComponent}] : extend")
         }
         PrintMojo.RELATION.IMPORT -> {
-            File(actualFileName).appendText("\r\n[${relationship.currentComponent}] ..> [${relationship.relatedComponent}] : import")
+            destination.appendText("\r\n[${relationship.currentComponent}] ..> [${relationship.relatedComponent}] : import")
         }
     }
 }

@@ -6,6 +6,7 @@ import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.ProjectBuildingException
+import java.io.File
 import java.util.function.Consumer
 
 /**
@@ -13,14 +14,14 @@ import java.util.function.Consumer
  */
 
 
-fun navigateProject(relationshipSet: HashSet<PrintMojo.Relationship>, toNavigate: MavenProject, localFileName: String, commonObjectHolder: PrintMojo.CommonObjectHolder) {
+fun navigateProject(relationshipSet: HashSet<PrintMojo.Relationship>, toNavigate: MavenProject, destination: File, commonObjectHolder: PrintMojo.CommonObjectHolder) {
     toNavigate.let {
         val currentComponent = mavenProjectString(it)
-        addComponentToFile(currentComponent, localFileName)
+        addComponentToFile(currentComponent, destination)
         it.parent?.let { parentProject ->
             if (!commonObjectHolder.targetProjectCollectedProjects.contains(parentProject)) {
                 addMavenProjectRelationship(relationshipSet, parentProject, PrintMojo.RELATION.PARENT, currentComponent, commonObjectHolder.log)
-                navigateProject(relationshipSet, parentProject, localFileName, commonObjectHolder)
+                navigateProject(relationshipSet, parentProject, destination, commonObjectHolder)
             }
         }
         it.originalModel?.dependencyManagement?.let { dependencyManagement ->
@@ -38,18 +39,18 @@ fun navigateProject(relationshipSet: HashSet<PrintMojo.Relationship>, toNavigate
     }
 }
 
-fun writeRelationships(relationshipSet: HashSet<PrintMojo.Relationship>, localFileName: String, log: Log) {
+fun writeRelationships(relationshipSet: HashSet<PrintMojo.Relationship>, destination: File, log: Log) {
     log.debug("Write relationships")
     relationshipSet
             .map { it.currentComponent }
             .toHashSet()
             .forEach {
-                log.debug("addComponentToFile $it -> $localFileName")
-                addComponentToFile(it, localFileName)
+                log.debug("addComponentToFile $it -> ${destination.absolutePath}")
+                addComponentToFile(it, destination)
             }
     relationshipSet.forEach {
         log.debug("writeRelationship $it")
-        writeRelationship(it, localFileName, log)
+        writeRelationship(it, destination, log)
     }
 }
 
@@ -75,10 +76,10 @@ private fun navigateDependency(dependency: Dependency, commonObjectHolder: Print
         true -> {
             val fileName = dependencyString(dependency).replace(".", "_").replace(":", "_")
             val relationship = HashSet<PrintMojo.Relationship>();
-            initFile(fileName, commonObjectHolder.log)
-            navigateProject(relationship, project, fileName, commonObjectHolder)
-            writeRelationships(relationship, fileName, commonObjectHolder.log)
-            done(fileName, commonObjectHolder.log)
+            val destination = initFile(fileName, commonObjectHolder.outputDirectory, commonObjectHolder.generatedFiles, commonObjectHolder.log)
+            navigateProject(relationship, project, destination, commonObjectHolder)
+            writeRelationships(relationship, destination, commonObjectHolder.log)
+            done(destination, commonObjectHolder.log)
         }
         false -> commonObjectHolder.log.warn("Failed to retrieve Maven Project for ${dependencyString(dependency)}")
     }
