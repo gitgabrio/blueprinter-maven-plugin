@@ -52,7 +52,7 @@
     <version.maven.dependency.tree>3.0.1</version.maven.dependency.tree>
     <version.maven.plugin-testing>3.3.0</version.maven.plugin-testing>
     <version.kotlin>1.3.41</version.kotlin>
-    <version.plantuml>8059</version.plantuml>
+    <version.plantuml>1.2019.8</version.plantuml>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 

@@ -17,7 +17,6 @@ import java.util.function.Consumer
 fun navigateProject(relationshipSet: HashSet<PrintMojo.Relationship>, toNavigate: MavenProject, destination: File, commonObjectHolder: PrintMojo.CommonObjectHolder) {
     toNavigate.let {
         val currentComponent = mavenProjectString(it)
-        addComponentToFile(currentComponent, destination)
         it.parent?.let { parentProject ->
             if (!commonObjectHolder.targetProjectCollectedProjects.contains(parentProject)) {
                 addMavenProjectRelationship(relationshipSet, parentProject, PrintMojo.RELATION.PARENT, currentComponent, commonObjectHolder.log)
@@ -34,23 +33,30 @@ fun navigateProject(relationshipSet: HashSet<PrintMojo.Relationship>, toNavigate
                 ?.filter { collectedProject -> collectedProject.parent == it }
                 ?.forEach(Consumer { collectedProject ->
                     addMavenProjectRelationship(relationshipSet, collectedProject, PrintMojo.RELATION.CHILD, currentComponent, commonObjectHolder.log)
-
                 })
     }
 }
 
-fun writeRelationships(relationshipSet: HashSet<PrintMojo.Relationship>, destination: File, log: Log) {
+fun writeRelationships(relationshipSet: HashSet<PrintMojo.Relationship>, targetProjectCollectedProjects: ArrayList<MavenProject>, destination: File, log: Log) {
     log.debug("Write relationships")
-    relationshipSet
-            .map { it.currentComponent }
-            .toHashSet()
-            .forEach {
-                log.debug("addComponentToFile $it -> ${destination.absolutePath}")
-                addComponentToFile(it, destination)
-            }
+    val savedComponents = hashSetOf<String>()
     relationshipSet.forEach {
+        if (!savedComponents.contains(it.currentComponent)) {
+            log.debug("addComponentToFile $it -> ${destination.absolutePath}")
+            it.hyperlink = getHyperlink(it, targetProjectCollectedProjects, destination)
+            savedComponents.add(it.currentComponent)
+        }
         log.debug("writeRelationship $it")
         writeRelationship(it, destination, log)
+    }
+}
+
+private fun getHyperlink(relationship: PrintMojo.Relationship, targetProjectCollectedProjects: ArrayList<MavenProject>, destination: File): String? {
+    var relatedComponent = relationship.relatedComponent
+    val componentFileName = relatedComponent.replace(".", "_").replace(":", "_")
+    return when (destination.nameWithoutExtension != componentFileName && componentNotInMavenProjectList(targetProjectCollectedProjects, relatedComponent)) {
+        true -> "[[$componentFileName.html]]"
+        false -> null
     }
 }
 
@@ -78,7 +84,7 @@ private fun navigateDependency(dependency: Dependency, commonObjectHolder: Print
             val relationship = HashSet<PrintMojo.Relationship>();
             val destination = initFile(fileName, commonObjectHolder.outputDirectory, commonObjectHolder.generatedFiles, commonObjectHolder.log)
             navigateProject(relationship, project, destination, commonObjectHolder)
-            writeRelationships(relationship, destination, commonObjectHolder.log)
+            writeRelationships(relationship, commonObjectHolder.targetProjectCollectedProjects, destination, commonObjectHolder.log)
             done(destination, commonObjectHolder.log)
         }
         false -> commonObjectHolder.log.warn("Failed to retrieve Maven Project for ${dependencyString(dependency)}")
@@ -122,4 +128,9 @@ private fun resolveVersion(version: String, project: MavenProject): String? {
 
 private fun dependencyNotInMavenProjectList(listToCheck: ArrayList<MavenProject>, dependency: Dependency): Boolean {
     return listToCheck.none() { it.groupId == dependency.groupId && it.artifactId == dependency.artifactId }
+}
+
+private fun componentNotInMavenProjectList(listToCheck: ArrayList<MavenProject>, component: String): Boolean {
+    val split: List<String> = component.split(":")
+    return listToCheck.none() { it.groupId == split[0] && it.artifactId == split[1] }
 }

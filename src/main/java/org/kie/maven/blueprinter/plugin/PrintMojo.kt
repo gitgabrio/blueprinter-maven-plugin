@@ -57,7 +57,7 @@ open class PrintMojo : AbstractMojo() {
     @Component
     private lateinit var mavenProjectBuilder: ProjectBuilder
 
-    private  lateinit var destination: File
+    private lateinit var destination: File
 
     enum class RELATION {
         PARENT,
@@ -84,7 +84,7 @@ open class PrintMojo : AbstractMojo() {
             navigateProject(targetProjectRelationshipSet, it, destination, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, generatedFiles, outputDirectory, log))
             projectToBuild.remove(it)
             if (projectToBuild.isEmpty()) {
-                writeRelationships(targetProjectRelationshipSet, destination, log)
+                writeRelationships(targetProjectRelationshipSet, targetProjectCollectedProjects, destination, log)
                 done(destination, log)
                 started = false
                 val svgFilesMap = createSVGFilesMap(generatedFiles)
@@ -107,6 +107,8 @@ open class PrintMojo : AbstractMojo() {
 
     class Relationship(val currentComponent: String, val relatedComponent: String, val relation: RELATION) {
 
+        var hyperlink: String? = null
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -128,7 +130,7 @@ open class PrintMojo : AbstractMojo() {
         }
 
         override fun toString(): String {
-            return "Relationship(currentComponent='$currentComponent', relatedComponent='$relatedComponent', relation=$relation)"
+            return "Relationship(currentComponent='$currentComponent', relatedComponent='$relatedComponent', relation=$relation, hyperlink=$hyperlink)"
         }
 
 

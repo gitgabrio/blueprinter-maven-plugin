@@ -23,7 +23,7 @@ import java.io.File
  */
 
 
-fun addComponentToFile(component: String, destination: File) = destination.appendText("\r\n[$component]")
+//fun addComponentToFile(component: String, destination: File) = destination.appendText("\r\n$component")
 
 fun initFile(localFileName: String, outputDirectory: String, generatedFiles: HashSet<File>, log: Log): File {
     val actualFileName = "$outputDirectory${File.separator}$localFileName.puml"
@@ -35,6 +35,7 @@ fun initFile(localFileName: String, outputDirectory: String, generatedFiles: Has
     val toReturn = File(actualFileName)
     toReturn.writeText("@startuml")
     toReturn.appendText("\r\nleft to right direction")
+    toReturn.appendText("\r\nskinparam svgLinkTarget _new")
     generatedFiles.add(toReturn)
     return toReturn
 }
@@ -46,15 +47,21 @@ fun done(destination: File, log: Log) {
 
 fun writeRelationship(relationship: PrintMojo.Relationship, destination: File, log: Log) {
     log.debug("writeRelationship to ${destination.absolutePath}")
+    var extend = "extend"
+    var import = "import"
+    relationship.hyperlink?.let {
+        extend = "$extend $it"
+        import = "$import $it"
+    }
     when (relationship.relation) {
         PrintMojo.RELATION.PARENT -> {
-            destination.appendText("\r\n[${relationship.relatedComponent}] <-- [${relationship.currentComponent}] : extend")
+            destination.appendText("\r\n[${relationship.relatedComponent}] <-- [${relationship.currentComponent}] : $extend")
         }
         PrintMojo.RELATION.CHILD -> {
-            destination.appendText("\r\n[${relationship.currentComponent}] <-- [${relationship.relatedComponent}] : extend")
+            destination.appendText("\r\n[${relationship.currentComponent}] <-- [${relationship.relatedComponent}] : $extend")
         }
         PrintMojo.RELATION.IMPORT -> {
-            destination.appendText("\r\n[${relationship.currentComponent}] ..> [${relationship.relatedComponent}] : import")
+            destination.appendText("\r\n[${relationship.currentComponent}] ..> [${relationship.relatedComponent}] : $import")
         }
     }
 }
