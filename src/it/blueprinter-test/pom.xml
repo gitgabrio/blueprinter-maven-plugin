@@ -48,25 +48,25 @@
     <module>bom-b</module>
   </modules>
 
-  <build>
-    <defaultGoal>package</defaultGoal>
-    <plugins>
-      <plugin>
-        <groupId>org.kie</groupId>
-        <artifactId>blueprinter-maven-plugin</artifactId>
-        <version>${version.maven.blueprinter.plugin}</version>
-        <executions>
-          <execution>
-            <id>print</id>
-            <phase>install</phase>
-            <goals>
-              <goal>print</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+<!--  <build>-->
+<!--    <defaultGoal>package</defaultGoal>-->
+<!--    <plugins>-->
+<!--      <plugin>-->
+<!--        <groupId>org.kie</groupId>-->
+<!--        <artifactId>blueprinter-maven-plugin</artifactId>-->
+<!--        <version>${version.maven.blueprinter.plugin}</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>print</id>-->
+<!--            <phase>install</phase>-->
+<!--            <goals>-->
+<!--              <goal>print</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
+<!--    </plugins>-->
+<!--  </build>-->
 
 
 

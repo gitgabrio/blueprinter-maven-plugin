@@ -19,12 +19,13 @@ import org.apache.maven.execution.MavenSession
 import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.plugins.annotations.*
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.ProjectBuilder
 import org.apache.maven.repository.RepositorySystem
-import java.io.File
+import org.kie.maven.blueprinter.plugin.dataclass.CommonObjectHolder
+import org.kie.maven.blueprinter.plugin.dataclass.HTMLModel
+import org.kie.maven.blueprinter.plugin.dataclass.Relationship
 
 
 /**
@@ -57,18 +58,26 @@ open class PrintMojo : AbstractMojo() {
     @Component
     private lateinit var mavenProjectBuilder: ProjectBuilder
 
-    private lateinit var destination: File
-
     enum class RELATION {
         PARENT,
         IMPORT,
         CHILD
     }
 
-    private val targetProjectRelationshipSet = HashSet<Relationship>()
+    private val globalProjectRelationshipSet = HashSet<Relationship>()
+    /**
+     * Progress indicator; evaluation completed when get to <b>empty</b> status
+     */
     private val projectToBuild = ArrayList<MavenProject>()
+    /**
+     * Maven collected projects of the main one
+     */
     private val targetProjectCollectedProjects = ArrayList<MavenProject>()
-    private val generatedFiles = HashSet<File>()
+
+    /**
+     * The <code>HTMLModel</code>s that will be used to generate specific html files
+     */
+    private val htmlModels = HashSet<HTMLModel>()
     private var started = false
 
 
@@ -78,21 +87,22 @@ open class PrintMojo : AbstractMojo() {
         project.let {
             if (!started) {
                 init(it)
-                destination = initFile(fileName, outputDirectory, generatedFiles, log)
                 started = true
             }
-            navigateProject(targetProjectRelationshipSet, it, destination, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, generatedFiles, outputDirectory, log))
+            navigateProject(it, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, globalProjectRelationshipSet, outputDirectory, log))
             projectToBuild.remove(it)
             if (projectToBuild.isEmpty()) {
-                writeRelationships(targetProjectRelationshipSet, targetProjectCollectedProjects, destination, log)
-                done(destination, log)
                 started = false
-                val svgFilesMap = createSVGFilesMap(generatedFiles)
+                val generatedPUMLS = writeRelationshipsToPUML(globalProjectRelationshipSet, outputDirectory, log)
+                val svgFilesMap = createSVGFilesMap(generatedPUMLS)
                 createHTMLFiles(svgFilesMap)
             }
         }
     }
 
+    /**
+     * Initialize the progress indicator and the collected projects containers
+     */
     private fun init(mavenProject: MavenProject) {
         log.debug("Init with ${mavenProject.name}")
         projectToBuild.clear()
@@ -103,36 +113,4 @@ open class PrintMojo : AbstractMojo() {
     }
 
 
-    class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject, val targetProjectCollectedProjects: ArrayList<MavenProject>, val generatedFiles: HashSet<File>, val outputDirectory: String, val log: Log)
-
-    class Relationship(val currentComponent: String, val relatedComponent: String, val relation: RELATION) {
-
-        var hyperlink: String? = null
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Relationship
-
-            if (currentComponent != other.currentComponent) return false
-            if (relatedComponent != other.relatedComponent) return false
-            if (relation != other.relation) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = currentComponent.hashCode()
-            result = 31 * result + relatedComponent.hashCode()
-            result = 31 * result + relation.hashCode()
-            return result
-        }
-
-        override fun toString(): String {
-            return "Relationship(currentComponent='$currentComponent', relatedComponent='$relatedComponent', relation=$relation, hyperlink=$hyperlink)"
-        }
-
-
-    }
 }
