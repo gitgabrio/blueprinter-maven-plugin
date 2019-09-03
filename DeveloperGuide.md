@@ -37,6 +37,11 @@ At the end of execution, built artifacts are put inside **target/its** folder, w
 
     mvn clean test
     
+Debug
+-----
+To debug plugin execution on test project, uncomment the *invoker.mavenOpts* line in the **invoker.properties** file. Launch the remote debugger (on port 8000) after
+*maven-invoker-plugin:3.2.0:run* has been print on console 
+    
 
 
 

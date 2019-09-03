@@ -25,20 +25,61 @@ import java.io.File
  */
 
 
+/**
+ * Write all the given <code>Relationship</code>s to <b>PUML</b> files
+ *
+ * [relationshipSet] the <code>Relationship</code>s to write
+ * [outputDirectory]
+ * [log]
+ */
 fun writeRelationshipsToPUML(relationshipSet: HashSet<Relationship>, outputDirectory: String, log: Log): Set<File> {
-    log.debug("Write relationships")
-    val relationshipMap: Map<ComponentModel, List<Relationship>> = relationshipSet.groupBy({ it.currentComponent }, { it })
-    return relationshipMap.entries.map {
-        val writtenFile = initFile(it.key.gaIdentifier, it.key.linkedFile, outputDirectory, log)
-        it.value.forEach { relationship ->
-            writeAliasDeclaration(relationship.relatedComponent, writtenFile, log)
-            writeRelationship(relationship, writtenFile, log)
-        }
-        completeFile(writtenFile, log)
-        writtenFile
-    }.toSet()
+    log.debug("Write all Relationships to PUML files")
+    val currentRelationshipMap: Map<ComponentModel, List<Relationship>> = relationshipSet.groupBy({ it.currentComponent }, { it })
+    val toReturn = currentRelationshipMap.entries.map {
+        writeRelationshipsToPUML(it, outputDirectory, log)
+    }.toMutableSet()
+    // This is to generate files for components that never appear as "currentComponent" on the relationships
+    val relatedRelationshipMap: Map<ComponentModel, List<Relationship>> = relationshipSet.groupBy({ it.relatedComponent }, { it })
+    val relatedComponentFiles = relatedRelationshipMap.entries
+            .filterNot {
+                val targetFile = File("$outputDirectory${File.separator}${it.key.linkedFile}.puml");
+                toReturn.contains(targetFile)
+            }
+            .map {
+                writeRelationshipsToPUML(it, outputDirectory, log, true)
+            }.toSet()
+    toReturn.addAll(relatedComponentFiles)
+    return toReturn;
 }
 
+/**
+ * Write a <code>Map.Entry&lt;ComponentModel, List&lt;Relationship&gt;&gt;</code> to a PUML file
+ *
+ * [relationshipMapEntry] the <code>Map.Entry&lt;ComponentModel, List&lt;Relationship&gt;&gt;</code> to write
+ * [outputDirectory]
+ * [log]
+ * [relatedPointOfView] if <code>true</code>, it consider the PUML file to describe the <b>relatedComponent</b> relationships, otherwise (default) it consider the <b>currentComponent</b> one
+ */
+private fun writeRelationshipsToPUML(relationshipMapEntry: Map.Entry<ComponentModel, List<Relationship>>, outputDirectory: String, log: Log, relatedPointOfView: Boolean = false): File {
+    log.debug("Write relationship' map entry to PUML file $outputDirectory${File.separator}${relationshipMapEntry.key.linkedFile}")
+    val toReturn = initFile(relationshipMapEntry.key.gaIdentifier, relationshipMapEntry.key.linkedFile, outputDirectory, log)
+    relationshipMapEntry.value.forEach { relationship ->
+        val relatedComponent = if (relatedPointOfView) relationship.currentComponent else relationship.relatedComponent
+        writeAliasDeclaration(relatedComponent, toReturn, log)
+        writeRelationship(relationship, toReturn, log, relatedPointOfView)
+    }
+    completeFile(toReturn, log)
+    return toReturn
+}
+
+/**
+ * Create PUMLM file with initial - fixed -lines
+ *
+ * [gaIdentifier]
+ * [localFileName]
+ * [outputDirectory]
+ * [log]
+ */
 private fun initFile(gaIdentifier: String, localFileName: String, outputDirectory: String, log: Log): File {
     val actualFileName = "$outputDirectory${File.separator}$localFileName.puml"
     log.debug("initFile $actualFileName")
@@ -58,28 +99,54 @@ private fun initFile(gaIdentifier: String, localFileName: String, outputDirector
     return toReturn
 }
 
+/**
+ * Write alias declaration to PUML file
+ *
+ * [relatedComponent] the component to be considered as "related"
+ * [destination]
+ * [log]
+ *
+ */
 private fun writeAliasDeclaration(relatedComponent: ComponentModel, destination: File, log: Log) {
     log.debug("writeRelationship to ${destination.absolutePath}")
     destination.appendText("\r\n[${relatedComponent.gaIdentifier}] as ${relatedComponent.alias} [[${relatedComponent.linkedFile}.html]]")
 }
 
-private fun writeRelationship(relationship: Relationship, destination: File, log: Log) {
+/**
+ * Write components relations to PUML file
+ *
+ * [relationship]
+ * [destination]
+ * [log]
+ * [relatedPointOfView] if <code>true</code>, it consider the relation to describe the <b>relatedComponent</b> relationships, otherwise (default) it consider the <b>currentComponent</b> one
+ *
+ */
+private fun writeRelationship(relationship: Relationship, destination: File, log: Log, relatedPointOfView: Boolean = false) {
     log.debug("writeRelationship to ${destination.absolutePath}")
-    var extend = "extend"
-    var import = "import"
+    val extend = "extend"
+    val import = "import"
     when (relationship.relation) {
         PrintMojo.RELATION.PARENT -> {
-            destination.appendText("\r\n[${relationship.relatedComponent.alias}] <-- [${relationship.currentComponent.gaIdentifier}] : $extend")
+            val left = if (relatedPointOfView) relationship.relatedComponent.gaIdentifier  else relationship.relatedComponent.alias
+            val right = if (relatedPointOfView) relationship.currentComponent.alias  else relationship.currentComponent.gaIdentifier
+            destination.appendText("\r\n[$left] <-- [$right] : $extend")
         }
         PrintMojo.RELATION.CHILD -> {
-            destination.appendText("\r\n[${relationship.currentComponent.gaIdentifier}] <-- [${relationship.relatedComponent.alias}] : $extend")
+            val left = if (relatedPointOfView) relationship.currentComponent.alias  else relationship.currentComponent.gaIdentifier
+            val right = if (relatedPointOfView) relationship.relatedComponent.gaIdentifier  else relationship.relatedComponent.alias
+            destination.appendText("\r\n[$left] <-- [$right] : $extend")
         }
         PrintMojo.RELATION.IMPORT -> {
-            destination.appendText("\r\n[${relationship.currentComponent.gaIdentifier}] ..> [${relationship.relatedComponent.alias}] : $import")
+            val left = if (relatedPointOfView) relationship.currentComponent.alias  else relationship.currentComponent.gaIdentifier
+            val right = if (relatedPointOfView) relationship.relatedComponent.gaIdentifier  else relationship.relatedComponent.alias
+            destination.appendText("\r\n[$left] ..> [$right] : $import")
         }
     }
 }
 
+/**
+ * Write last - fixed - line to PUML file
+ */
 private fun completeFile(destination: File, log: Log) {
     log.debug("... done ${destination.absolutePath}")
     destination.appendText("\r\n@enduml")
