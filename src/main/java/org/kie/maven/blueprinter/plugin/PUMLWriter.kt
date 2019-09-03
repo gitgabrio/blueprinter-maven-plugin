@@ -49,6 +49,7 @@ fun writeRelationshipsToPUML(relationshipSet: HashSet<Relationship>, outputDirec
                 writeRelationshipsToPUML(it, outputDirectory, log, true)
             }.toSet()
     toReturn.addAll(relatedComponentFiles)
+    toReturn.add(createIndexFile(currentRelationshipMap.keys, outputDirectory, log))
     return toReturn;
 }
 
@@ -72,15 +73,25 @@ private fun writeRelationshipsToPUML(relationshipMapEntry: Map.Entry<ComponentMo
     return toReturn
 }
 
+private fun createIndexFile(currentComponents: Set<ComponentModel>, outputDirectory: String, log: Log ) : File {
+    log.debug("Write components to PUML index file $outputDirectory${File.separator}index")
+    val toReturn = initFile("INDEX", "index", outputDirectory, log)
+    currentComponents.forEach {
+        writeAliasDeclaration(it, toReturn, log)
+    }
+    completeFile(toReturn, log)
+    return toReturn;
+}
+
 /**
- * Create PUMLM file with initial - fixed -lines
+ * Create PUML file with initial - fixed -lines
  *
- * [gaIdentifier]
+ * [title]
  * [localFileName]
  * [outputDirectory]
  * [log]
  */
-private fun initFile(gaIdentifier: String, localFileName: String, outputDirectory: String, log: Log): File {
+private fun initFile(title: String, localFileName: String, outputDirectory: String, log: Log): File {
     val actualFileName = "$outputDirectory${File.separator}$localFileName.puml"
     log.debug("initFile $actualFileName")
     val outputDir = File(outputDirectory)
@@ -95,7 +106,9 @@ private fun initFile(gaIdentifier: String, localFileName: String, outputDirector
     toReturn.appendText("\r\nskinparam titleBorderColor red")
     toReturn.appendText("\r\nskinparam titleBackgroundColor Aqua-CadetBlue")
     toReturn.appendText("\r\nskinparam svgLinkTarget _new")
-    toReturn.appendText("\r\ntitle $gaIdentifier")
+    toReturn.appendText("\r\nskinparam handwritten true")
+    toReturn.appendText("\r\ntitle $title (preview version)")
+
     return toReturn
 }
 

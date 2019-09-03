@@ -112,5 +112,4 @@ open class PrintMojo : AbstractMojo() {
         targetProjectCollectedProjects.add(mavenProject)
     }
 
-
 }
