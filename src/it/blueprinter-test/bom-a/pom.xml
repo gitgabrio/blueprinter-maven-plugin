@@ -35,6 +35,27 @@
     </dependencies>
   </dependencyManagement>
 
-
+  <build>
+    <defaultGoal>package</defaultGoal>
+    <plugins>
+      <plugin>
+        <groupId>org.kie</groupId>
+        <artifactId>blueprinter-maven-plugin</artifactId>
+        <version>${version.maven.blueprinter.plugin}</version>
+        <configuration>
+          <logLevel>DEBUG</logLevel>
+        </configuration>
+        <executions>
+          <execution>
+            <id>print</id>
+            <phase>install</phase>
+            <goals>
+              <goal>print</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
