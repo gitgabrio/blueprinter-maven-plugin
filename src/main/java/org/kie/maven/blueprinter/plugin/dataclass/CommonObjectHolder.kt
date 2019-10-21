@@ -20,18 +20,17 @@ import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.ProjectBuilder
 import org.apache.maven.repository.RepositorySystem
-import java.io.File
 
 /**
  * Utility class to store objects used throughout execution
  * [repositorySystem]
  * [mavenProjectBuilder]
  * [session]
- * [targetProject] the <b>maven</b> module currently built in a multi-module project, otherwise the only module present
- * [targetProjectCollectedProjects] the <code>MavenProject</code>s collected for the <b>target</b> one
- * [globalRelationshipSet] all the <code>Relationship</code>s identified by recursively read during overall execution
- * [outputDirectory] the <b>directory</b> where all html files will be written
- * [log] the single <code>Log</code> used throughout whole execution
+ * [targetProject] the **maven** module currently built in a multi-module project, otherwise the only module present
+ * [targetProjectCollectedProjects] the [MavenProject]s collected for the **target** one
+ * [globalRelationshipSet] all the [Relationship]s identified by recursively read during overall execution
+ * [outputDirectory] the **directory** where all html files will be written
+ * [log] the single [Log] used throughout whole execution
  *
  */
 data class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject, val targetProjectCollectedProjects: ArrayList<MavenProject>, val globalRelationshipSet: HashSet<Relationship>,  val outputDirectory: String, val log: Log)

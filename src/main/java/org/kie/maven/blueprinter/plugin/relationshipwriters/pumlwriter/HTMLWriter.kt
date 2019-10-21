@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kie.maven.blueprinter.plugin
+package org.kie.maven.blueprinter.plugin.relationshipwriters.pumlwriter
 
+import org.kie.maven.blueprinter.plugin.utils.getDocument
+import org.kie.maven.blueprinter.plugin.utils.getEmptyDocument
+import org.kie.maven.blueprinter.plugin.utils.getHtmlString
+import org.kie.maven.blueprinter.plugin.utils.getNode
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -57,7 +61,7 @@ private fun initHTML(htmlFile: File) : Document {
     val headElement = toReturn.createElement("head")
     htmlElement.appendChild(headElement)
     val titleElement = toReturn.createElement("title")
-    titleElement.textContent = "${htmlFile.nameWithoutExtension}"
+    titleElement.textContent = htmlFile.nameWithoutExtension
     headElement.appendChild(titleElement)
     return toReturn
 }

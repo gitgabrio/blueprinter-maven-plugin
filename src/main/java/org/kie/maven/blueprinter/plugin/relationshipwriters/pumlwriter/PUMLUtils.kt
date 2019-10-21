@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kie.maven.blueprinter.plugin
+package org.kie.maven.blueprinter.plugin.relationshipwriters.pumlwriter
 
 import net.sourceforge.plantuml.FileFormat
 import net.sourceforge.plantuml.FileFormatOption
@@ -26,7 +26,7 @@ import java.io.File
  */
 
 fun createSVGFilesMap(pumlFiles: Set<File>): Map<File, HashSet<File>> {
-    return pumlFiles.associateBy({it}, { createSVG(it)})
+    return pumlFiles.associateBy({it}, { createSVG(it) })
 }
 
 

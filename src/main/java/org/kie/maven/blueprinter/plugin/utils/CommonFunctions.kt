@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kie.maven.blueprinter.plugin
+package org.kie.maven.blueprinter.plugin.utils
 
 import org.apache.maven.model.Dependency
 import org.apache.maven.project.MavenProject
@@ -24,7 +24,7 @@ import org.kie.maven.blueprinter.plugin.dataclass.ComponentModel
  */
 
 /**
- * Returns a String representing the <b>groupId</code> and <code>artifactId</code> of the given <code>MavenProject</code>
+ * Returns a String representing the **groupId** and **artifactId** of the given [MavenProject]
  * e.g. org.test.project:foo-bar
  *
  * [mavenProject]
@@ -32,7 +32,7 @@ import org.kie.maven.blueprinter.plugin.dataclass.ComponentModel
 fun mavenProjectToGAString(mavenProject: MavenProject): String = "${mavenProject.groupId}:${mavenProject.artifactId}"
 
 /**
- * Returns a String containing only the <b>capitalized</b> substring of <b>groupId</code> and <code>artifactId</code> (split by <b>".", "-", "_"</b>) of the given <code>MavenProject</code>
+ * Returns a String containing only the **capitalized** substring of **groupId** and **artifactId** (split by **".", "-", "_"**) of the given [MavenProject]
  * e.g. org.test.project:foo-bar -> OrgTestProjectFooBar
  *
  * [mavenProject]
@@ -40,7 +40,7 @@ fun mavenProjectToGAString(mavenProject: MavenProject): String = "${mavenProject
 fun mavenProjectToAlias(mavenProject: MavenProject): String = gaToAlias(mavenProject.groupId, mavenProject.artifactId)
 
 /**
- * Returns a String representing the <b>groupId</code> and <code>artifactId</code> of the given <code>MavenProject</code> with "." and ":" replaced by "_"
+ * Returns a String representing the  **groupId** and **artifactId** of the given [MavenProject] with "." and ":" replaced by "_"
  * e.g. org.test.project:foo-bar -> org_test_project_foo-bar
  *
  * [mavenProject]
@@ -48,7 +48,7 @@ fun mavenProjectToAlias(mavenProject: MavenProject): String = gaToAlias(mavenPro
 fun mavenProjectToFileName(mavenProject: MavenProject): String = gaToFileName(mavenProject.groupId, mavenProject.artifactId)
 
 /**
- * Returns a <code>ComponentModel</code> representation of the given <code>MavenProject</code>
+ * Returns a [ComponentModel] representation of the given [MavenProject]
  *
  * [mavenProject]
  */
@@ -57,7 +57,7 @@ fun mavenProjectToComponentModel(mavenProject: MavenProject): ComponentModel {
 }
 
 /**
- * Returns a String representing the <b>groupId</code> and <code>artifactId</code> of the given <code>Dependency</code>
+ * Returns a String representing the  **groupId** and **artifactId** of the given [Dependency]
  * e.g. org.test.project:foo-bar
  *
  * [dependency]
@@ -65,7 +65,7 @@ fun mavenProjectToComponentModel(mavenProject: MavenProject): ComponentModel {
 fun dependencyToGAString(dependency: Dependency): String = "${dependency.groupId}:${dependency.artifactId}"
 
 /**
- * Returns a String containing only the <b>capitalized</b> substring of <b>groupId</code> and <code>artifactId</code> (split by <b>".", "-", "_"</b>) of the given <code>Dependency</code>
+ * Returns a String containing only the **capitalized** substring of  **groupId** and **artifactId** (split by **".", "-", "_"**) of the given [Dependency]
  * e.g. org.test.project:foo-bar -> OrgTestProjectFooBar
  *
  * [dependency]
@@ -74,7 +74,7 @@ fun dependencyToAlias(dependency: Dependency): String = gaToAlias(dependency.gro
 
 
 /**
- * Returns a String representing the <b>groupId</code> and <code>artifactId</code> of the given <code>Dependency</code> with "." and ":" replaced by "_"
+ * Returns a String representing the  **groupId** and **artifactId** of the given [Dependency] with "." and ":" replaced by "_"
  * e.g. org.test.project:foo-bar -> org_test_project_foo-bar
  *
  * [dependency]
@@ -82,7 +82,7 @@ fun dependencyToAlias(dependency: Dependency): String = gaToAlias(dependency.gro
 fun dependencyToFileName(dependency: Dependency): String = gaToFileName(dependency.groupId, dependency.artifactId)
 
 /**
- * Returns a <code>ComponentModel</code> representation of the given <code>Dependency</code>
+ * Returns a [ComponentModel] representation of the given [Dependency]
  *
  * [dependency]
  */

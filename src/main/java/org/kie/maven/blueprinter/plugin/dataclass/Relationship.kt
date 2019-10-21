@@ -18,14 +18,14 @@ package org.kie.maven.blueprinter.plugin.dataclass
 import org.kie.maven.blueprinter.plugin.PrintMojo
 
 /**
- * Class representing a relationship between <code>Component</code>s.
- * <b>Note</b>: [currentComponent] must be different then [relatedComponent]
- * Two <code>Relationship</code>s are considered equals if the two components are the same, but <b>regardless</b> of their position (left/right); moreover, the relation type is ignored:
+ * Class representing a relationship between [ComponentModel]s.
+ * **Note**: [currentComponent] must be different then [relatedComponent]
+ * Two [Relationship]s are considered equals if the two components are the same, but **regardless** of their position (left/right); moreover, the relation type is ignored:
  * e.g. Relationship(a, b, IMPORT) would be equals to Relationship(b, a, CHILD)
  *
- * [currentComponent] the <b>left-side</b> of the current <code>Relationship</code>
- * [relatedComponent] the <b>right-side</b> of the current <code>Relationship</code>
- * [relation] the relationship <b>type</b> of the current <code>Relationship</code>
+ * [currentComponent] the **left-side** of the current [Relationship]
+ * [relatedComponent] the **right-side** of the current [Relationship]
+ * [relation] the relationship **type** of the current [Relationship]
  */
 class Relationship(val currentComponent: ComponentModel, val relatedComponent: ComponentModel, val relation: PrintMojo.RELATION) {
 
@@ -34,31 +34,7 @@ class Relationship(val currentComponent: ComponentModel, val relatedComponent: C
             "$currentComponent should be different then $relatedComponent"
         }
     }
-
-
-
-//    /**
-//     * This implementation ignores [relation] and compares only if the [currentComponent] and [relatedComponent] in the provided <code>Relationship</code> to check are
-//     * present in the current instance, <bi>regardless</bi> of position; i.e. Relationship(a, b, IMPORT) would be equal to Relationship(b, a, CHILD)
-//     */
-//    override fun equals(other: Any?): Boolean {
-//        if (this === other) return true
-//        if (javaClass != other?.javaClass) return false
-//
-//        other as Relationship
-//
-//        if (currentComponent != other.currentComponent && currentComponent != other.relatedComponent) return false
-//        if (relatedComponent != other.relatedComponent && relatedComponent != other.currentComponent) return false
-//
-//        return true
-//    }
-//
-//    override fun hashCode(): Int {
-//        var result = currentComponent.hashCode()
-//        result = 31 * result + relatedComponent.hashCode()
-//        return result
-//    }
-
+    
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

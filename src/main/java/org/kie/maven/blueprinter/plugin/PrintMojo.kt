@@ -24,8 +24,9 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.project.ProjectBuilder
 import org.apache.maven.repository.RepositorySystem
 import org.kie.maven.blueprinter.plugin.dataclass.CommonObjectHolder
-import org.kie.maven.blueprinter.plugin.dataclass.HTMLModel
 import org.kie.maven.blueprinter.plugin.dataclass.Relationship
+import org.kie.maven.blueprinter.plugin.mavenprojectvisitors.MavenProjectVisitor
+import org.kie.maven.blueprinter.plugin.relationshipwriters.pumlwriter.PUMLWriter
 
 
 /**
@@ -37,11 +38,17 @@ open class PrintMojo : AbstractMojo() {
     @Parameter(readonly = true, defaultValue = "\${project}")
     private lateinit var project: MavenProject
 
+//    /**
+//     * Generated scheme file name
+//     */
+//    @Parameter(required = false, defaultValue = "scheme")
+//    private var fileName: String = "scheme"
+
     /**
      * Generated scheme file name
      */
-    @Parameter(required = false, defaultValue = "scheme")
-    private var fileName: String = "scheme"
+    @Parameter(required = false, defaultValue = "puml")
+    private var outputFormat: String = "puml"
 
     /**
      * Output directory
@@ -66,7 +73,7 @@ open class PrintMojo : AbstractMojo() {
 
     private val globalProjectRelationshipSet = HashSet<Relationship>()
     /**
-     * Progress indicator; evaluation completed when get to <b>empty</b> status
+     * Progress indicator; evaluation completed when get to **empty** status
      */
     private val projectToBuild = ArrayList<MavenProject>()
     /**
@@ -74,10 +81,6 @@ open class PrintMojo : AbstractMojo() {
      */
     private val targetProjectCollectedProjects = ArrayList<MavenProject>()
 
-    /**
-     * The <code>HTMLModel</code>s that will be used to generate specific html files
-     */
-    private val htmlModels = HashSet<HTMLModel>()
     private var started = false
 
 
@@ -89,13 +92,14 @@ open class PrintMojo : AbstractMojo() {
                 init(it)
                 started = true
             }
-            navigateProject(it, CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, globalProjectRelationshipSet, outputDirectory, log))
+            MavenProjectVisitor.init(it).visit(CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, globalProjectRelationshipSet, outputDirectory, log))
             projectToBuild.remove(it)
             if (projectToBuild.isEmpty()) {
                 started = false
-                val generatedPUMLS = writeRelationshipsToPUML(globalProjectRelationshipSet, outputDirectory, log)
-                val svgFilesMap = createSVGFilesMap(generatedPUMLS)
-                createHTMLFiles(svgFilesMap)
+                when(outputFormat)  {
+                    "puml" -> PUMLWriter.writeRelationships(globalProjectRelationshipSet, outputDirectory, log)
+                    else -> throw MojoExecutionException("Unexpected output format $outputFormat")
+                }
             }
         }
     }

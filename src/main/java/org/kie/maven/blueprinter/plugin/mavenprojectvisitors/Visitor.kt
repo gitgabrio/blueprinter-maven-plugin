@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kie.maven.blueprinter.plugin
+package org.kie.maven.blueprinter.plugin.mavenprojectvisitors
 
-import org.apache.maven.model.Dependency
-import org.apache.maven.plugin.logging.Log
-import org.apache.maven.project.MavenProject
+import org.kie.maven.blueprinter.plugin.dataclass.CommonObjectHolder
 
 /**
- * Functions used to log specific objects
+ * Interface to be implemented by all concrete [Visitor]s
  */
+interface Visitor {
 
-fun logMavenProject(mavenProject: MavenProject, relation: PrintMojo.RELATION, log: Log) = log.debug("$relation: ${mavenProjectToGAString(mavenProject)}:${mavenProject.version}")
-fun logDependency(dependency: Dependency, relation: PrintMojo.RELATION, log: Log) = log.debug("$relation: ${dependencyToGAString(dependency)}:${dependency.version}")
+    fun visit(commonObjectHolder: CommonObjectHolder)
+}
