@@ -82,7 +82,7 @@ class PUMLWriter {
          */
         private fun writeRelationshipsToPUML(relationshipMapEntry: Map.Entry<ComponentModel, List<Relationship>>, outputDirectory: String, log: Log, relatedPointOfView: Boolean = false): File {
             log.debug("Write relationship' map entry to PUML file $outputDirectory${File.separator}${relationshipMapEntry.key.linkedFile}")
-            val toReturn = initFile(relationshipMapEntry.key.gaIdentifier, relationshipMapEntry.key.linkedFile, outputDirectory, log)
+            val toReturn = initFile(relationshipMapEntry.key.gaIdentifier, relationshipMapEntry.key.linkedFile, outputDirectory, true, log)
             relationshipMapEntry.value.forEach { relationship ->
                 val relatedComponent = if (relatedPointOfView) relationship.currentComponent else relationship.relatedComponent
                 writeAliasDeclaration(relatedComponent, toReturn, log)
@@ -94,9 +94,13 @@ class PUMLWriter {
 
         private fun createIndexFile(currentComponents: Set<ComponentModel>, outputDirectory: String, log: Log): File {
             log.debug("Write components to PUML index file $outputDirectory${File.separator}index")
-            val toReturn = initFile("INDEX", "index", outputDirectory, log)
-            currentComponents.sortedByDescending { it.gaIdentifier }.forEach {
+            val sortedComponents: List<ComponentModel> = currentComponents.sortedBy { it.gaIdentifier }.toCollection(ArrayList())
+            val toReturn = initFile("INDEX", "index", outputDirectory, false, log)
+            sortedComponents.forEach {
                 writeAliasDeclaration(it, toReturn, log)
+            }
+            if (sortedComponents.size > 1) {
+                IntRange(0, sortedComponents.size - 2).forEach { writeAliasOrdering(sortedComponents[it].alias, sortedComponents[it + 1].alias, toReturn, log) }
             }
             completeFile(toReturn, log)
             return toReturn;
@@ -110,7 +114,7 @@ class PUMLWriter {
          * [outputDirectory]
          * [log]
          */
-        private fun initFile(title: String, localFileName: String, outputDirectory: String, log: Log): File {
+        private fun initFile(title: String, localFileName: String, outputDirectory: String, leftToRight: Boolean, log: Log): File {
             val actualFileName = "$outputDirectory${File.separator}$localFileName.puml"
             log.debug("initFile $actualFileName")
             val outputDir = File(outputDirectory)
@@ -119,8 +123,9 @@ class PUMLWriter {
             }
             val toReturn = File(actualFileName)
             toReturn.writeText("@startuml")
-//            toReturn.appendText("\r\ntop to bottom direction")
-            toReturn.appendText("\r\nleft to right direction")
+            if (leftToRight) {
+                toReturn.appendText("\r\nleft to right direction")
+            }
             toReturn.appendText("\r\nskinparam titleBorderRoundCorner 15")
             toReturn.appendText("\r\nskinparam titleBorderThickness 2")
             toReturn.appendText("\r\nskinparam titleBorderColor red")
@@ -128,7 +133,6 @@ class PUMLWriter {
             toReturn.appendText("\r\nskinparam svgLinkTarget _new")
             toReturn.appendText("\r\nskinparam handwritten true")
             toReturn.appendText("\r\ntitle $title (preview version)")
-
             return toReturn
         }
 
@@ -141,10 +145,22 @@ class PUMLWriter {
          *
          */
         private fun writeAliasDeclaration(relatedComponent: ComponentModel, destination: File, log: Log) {
-            log.debug("writeRelationship to ${destination.absolutePath}")
-            destination.appendText("\r\nframe {")
+            log.debug("writeAliasDeclaration to ${destination.absolutePath}")
             destination.appendText("\r\n[${relatedComponent.gaIdentifier}] as ${relatedComponent.alias} [[${relatedComponent.linkedFile}.html]]")
-            destination.appendText("\r\n}")
+        }
+
+        /**
+         * Write alias ordering to [destination] file
+         *
+         * [leftAlias]
+         * [rightAlias]
+         * [destination]
+         * [log]
+         *
+         */
+        private fun writeAliasOrdering(leftAlias: String, rightAlias: String, destination: File, log: Log) {
+            log.debug("writeAliasOrdering to ${destination.absolutePath}")
+            destination.appendText("\r\n$leftAlias -[hidden]down- $rightAlias")
         }
 
         /**
