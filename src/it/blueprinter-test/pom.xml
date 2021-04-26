@@ -11,7 +11,7 @@
 
   <properties>
     <version.commons-cli>1.4</version.commons-cli>
-    <version.commons-io>2.6</version.commons-io>
+    <version.commons-io>2.7</version.commons-io>
     <version.project>1.0</version.project>
     <version.maven.blueprinter.plugin>@project.version@</version.maven.blueprinter.plugin>
   </properties>
