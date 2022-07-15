@@ -14,7 +14,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <version.commons-beanutils>1.9.3</version.commons-beanutils>
+    <version.commons-beanutils>1.9.4</version.commons-beanutils>
   </properties>
 
   <dependencies>
