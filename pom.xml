@@ -51,9 +51,9 @@
     <version.junit>4.13.1</version.junit>
     <version.maven.dependency.tree>3.0.1</version.maven.dependency.tree>
     <version.maven.plugin-testing>3.3.0</version.maven.plugin-testing>
-    <version.kotlin>1.3.50</version.kotlin>
+    <version.kotlin>1.6.21</version.kotlin>
     <version.plantuml>1.2019.8</version.plantuml>
-    <version.dokka>0.10.0</version.dokka>
+    <version.dokka>2.0.0</version.dokka>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -251,6 +251,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
         <executions>
           <execution>
             <id>compile</id>
