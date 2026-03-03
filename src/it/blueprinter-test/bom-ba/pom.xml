@@ -13,5 +13,26 @@
   <artifactId>bom-ba</artifactId>
   <packaging>pom</packaging>
 
+  <properties>
+    <version.commons-beanutils>1.11.0</version.commons-beanutils>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+    </dependency>
+  </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${version.commons-beanutils}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
 
 </project>

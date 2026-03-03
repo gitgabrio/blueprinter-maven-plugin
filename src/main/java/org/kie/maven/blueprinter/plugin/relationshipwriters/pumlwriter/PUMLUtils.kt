@@ -26,11 +26,11 @@ import java.io.File
  */
 
 fun createSVGFilesMap(pumlFiles: Set<File>): Map<File, HashSet<File>> {
-    return pumlFiles.associateBy({it}, { createSVG(it) })
+    return pumlFiles.associateBy({it}, { createSVGSet(it) })
 }
 
 
-private fun createSVG(pumlFile: File): HashSet<File> {
+fun createSVGSet(pumlFile: File): HashSet<File> {
     val reader = SourceFileReader(pumlFile, pumlFile.parentFile, FileFormatOption(FileFormat.SVG))
     val generatedImages = reader.generatedImages
     return generatedImages.map { it.pngFile }.toHashSet()

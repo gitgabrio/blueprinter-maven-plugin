@@ -15,8 +15,9 @@
  */
 package org.kie.maven.blueprinter.plugin.relationshipwriters
 
-import org.apache.maven.plugin.logging.Log
+import org.kie.maven.blueprinter.plugin.dataclass.CommonLoggingHolder
 import org.kie.maven.blueprinter.plugin.dataclass.Relationship
+import java.io.File
 
 /**
  * Interface to be implemented by all concrete [RelationshipWriter]s
@@ -30,5 +31,21 @@ interface RelationshipWriter {
      * [outputDirectory]
      * [log]
      */
-    fun writeRelationships(relationshipSet: HashSet<Relationship>, outputDirectory: String, log: Log)
+    fun writeRelationships(
+        relationshipSet: HashSet<Relationship>,
+        outputDirectory: String,
+        commonLoggingHolder: CommonLoggingHolder
+    )
+
+    /**
+     * Write all the given puml [File]s in a single file inside the specific [outputDirectory]
+     *
+     * [generatedPumls] the puml [File]s to group
+     * [outputDirectory]
+     * [log]
+     *//*
+    fun createUberMap(
+        outputDirectory: String,
+        commonLoggingHolder: CommonLoggingHolder
+    ) : File*/
 }

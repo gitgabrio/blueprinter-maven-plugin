@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kie.maven.blueprinter.plugin.mavenprojectvisitors
+package org.kie.maven.blueprinter.plugin.dataclass
 
-import org.kie.maven.blueprinter.plugin.dataclass.AnalyzerObjectHolder
-import org.kie.maven.blueprinter.plugin.dataclass.PrintObjectHolder
+import org.apache.maven.plugin.logging.Log
+import java.util.function.Supplier
 
 /**
- * Interface to be implemented by all concrete [Visitor]s
+ * Utility class to store objects used for logging
+ * [log] the single [Log] used throughout whole execution
+ * [debug] the enablement of debug logging
+ *
  */
-interface Visitor {
-
-    fun visitForPrint(printObjectHolder: PrintObjectHolder)
-
-    fun visitForAnalysis(analyzerObjectHolder: AnalyzerObjectHolder)
-}
+data class CommonLoggingHolder( val log: Supplier<Log>, val debug: Boolean)

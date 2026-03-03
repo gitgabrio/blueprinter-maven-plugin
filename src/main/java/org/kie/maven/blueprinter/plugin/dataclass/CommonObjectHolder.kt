@@ -16,21 +16,21 @@
 package org.kie.maven.blueprinter.plugin.dataclass
 
 import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.ProjectBuilder
 import org.apache.maven.repository.RepositorySystem
 
 /**
- * Utility class to store objects used throughout execution
+ * Utility class to store objects used throughout execution for mojos purpose
  * [repositorySystem]
  * [mavenProjectBuilder]
  * [session]
  * [targetProject] the **maven** module currently built in a multi-module project, otherwise the only module present
  * [targetProjectCollectedProjects] the [MavenProject]s collected for the **target** one
- * [globalRelationshipSet] all the [Relationship]s identified by recursively read during overall execution
- * [outputDirectory] the **directory** where all html files will be written
- * [log] the single [Log] used throughout whole execution
+ * [outputDirectory] the **directory** where files will be written
+ * [commonLoggingHolder] the [CommonLoggingHolder] used for logging
  *
  */
-data class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject, val targetProjectCollectedProjects: ArrayList<MavenProject>, val globalRelationshipSet: HashSet<Relationship>,  val outputDirectory: String, val log: Log)
+data class CommonObjectHolder(val repositorySystem: RepositorySystem, val mavenProjectBuilder: ProjectBuilder, val session: MavenSession, val targetProject: MavenProject,
+                              val targetProjectCollectedProjects: ArrayList<MavenProject>,
+                              val outputDirectory: String, val commonLoggingHolder: CommonLoggingHolder)

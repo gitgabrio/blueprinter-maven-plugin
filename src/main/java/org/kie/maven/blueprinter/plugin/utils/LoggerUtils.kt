@@ -16,13 +16,31 @@
 package org.kie.maven.blueprinter.plugin.utils
 
 import org.apache.maven.model.Dependency
+import org.apache.maven.model.InputLocation
 import org.apache.maven.plugin.logging.Log
 import org.apache.maven.project.MavenProject
+import org.kie.maven.blueprinter.plugin.AbstractBluePrinterMojo.LOG_LEVEL
 import org.kie.maven.blueprinter.plugin.PrintMojo
+import org.kie.maven.blueprinter.plugin.dataclass.CommonLoggingHolder
 
 /**
  * Functions used to log specific objects
  */
 
-fun logMavenProject(mavenProject: MavenProject, relation: PrintMojo.RELATION, log: Log) = log.debug("$relation: ${mavenProjectToGAString(mavenProject)}:${mavenProject.version}")
-fun logDependency(dependency: Dependency, relation: PrintMojo.RELATION, log: Log) = log.debug("$relation: ${dependencyToGAString(dependency)}:${dependency.version}")
+fun logMavenProject(mavenProject: MavenProject, relation: PrintMojo.RELATION, commonLoggingHolder: CommonLoggingHolder) =
+    logMessage("$relation: ${mavenProjectToGAString(mavenProject)}:${mavenProject.version}", LOG_LEVEL.DEBUG, commonLoggingHolder)
+fun logDependency(dependency: Dependency, relation: PrintMojo.RELATION, commonLoggingHolder: CommonLoggingHolder) =
+    logMessage("$relation: ${dependencyToGAString(dependency)}:${dependency.version}", LOG_LEVEL.DEBUG, commonLoggingHolder)
+fun logDependency(dependency: Dependency, location: InputLocation, commonLoggingHolder: CommonLoggingHolder) =
+    logMessage("$location: ${dependencyToGAString(dependency)}:${dependency.version}", LOG_LEVEL.DEBUG, commonLoggingHolder)
+
+fun logMessage(message: String, logLevel: LOG_LEVEL, commonLoggingHolder: CommonLoggingHolder) {
+    when (logLevel) {
+        LOG_LEVEL.INFO -> commonLoggingHolder.log.get().info(message)
+        LOG_LEVEL.WARN -> commonLoggingHolder.log.get().warn(message)
+        LOG_LEVEL.ERROR -> commonLoggingHolder.log.get().warn(message)
+        LOG_LEVEL.DEBUG -> if (commonLoggingHolder.debug) {
+            commonLoggingHolder.log.get().debug(message)
+        }
+    }
+}

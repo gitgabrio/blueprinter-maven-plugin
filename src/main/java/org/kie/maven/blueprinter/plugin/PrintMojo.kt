@@ -15,55 +15,38 @@
  */
 package org.kie.maven.blueprinter.plugin
 
-import org.apache.maven.execution.MavenSession
-import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
-import org.apache.maven.plugins.annotations.*
+import org.apache.maven.plugins.annotations.InstantiationStrategy
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 import org.apache.maven.project.MavenProject
-import org.apache.maven.project.ProjectBuilder
-import org.apache.maven.repository.RepositorySystem
-import org.kie.maven.blueprinter.plugin.dataclass.CommonObjectHolder
+import org.kie.maven.blueprinter.plugin.dataclass.PrintObjectHolder
 import org.kie.maven.blueprinter.plugin.dataclass.Relationship
 import org.kie.maven.blueprinter.plugin.mavenprojectvisitors.MavenProjectVisitor
 import org.kie.maven.blueprinter.plugin.relationshipwriters.pumlwriter.PUMLWriter
+import org.kie.maven.blueprinter.plugin.relationshipwriters.pumlwriter.createHTMLFiles
+import org.kie.maven.blueprinter.plugin.utils.logMessage
+import java.io.File
 
 
 /**
  * Check and print out the overall MAVEN relationship
  */
-@Mojo(name = "print", defaultPhase = LifecyclePhase.VALIDATE, threadSafe = true, instantiationStrategy = InstantiationStrategy.SINGLETON)
-open class PrintMojo : AbstractMojo() {
-
-    @Parameter(readonly = true, defaultValue = "\${project}")
-    private lateinit var project: MavenProject
-
-//    /**
-//     * Generated scheme file name
-//     */
-//    @Parameter(required = false, defaultValue = "scheme")
-//    private var fileName: String = "scheme"
+@Mojo(
+    name = "print",
+    defaultPhase = LifecyclePhase.VALIDATE,
+    threadSafe = true,
+    instantiationStrategy = InstantiationStrategy.SINGLETON
+)
+open class PrintMojo : AbstractBluePrinterMojo() {
 
     /**
      * Generated scheme file name
      */
     @Parameter(required = false, defaultValue = "puml")
     private var outputFormat: String = "puml"
-
-    /**
-     * Output directory
-     */
-    @Parameter(required = false, defaultValue = "blueprinter")
-    private var outputDirectory: String = "blueprinter"
-
-    @Parameter(defaultValue = "\${session}", readonly = true, required = true)
-    private lateinit var session: MavenSession
-
-    @Component
-    private lateinit var repositorySystem: RepositorySystem
-
-    @Component
-    private lateinit var mavenProjectBuilder: ProjectBuilder
 
     enum class RELATION {
         PARENT,
@@ -72,48 +55,30 @@ open class PrintMojo : AbstractMojo() {
     }
 
     private val globalProjectRelationshipSet = HashSet<Relationship>()
-    /**
-     * Progress indicator; evaluation completed when get to **empty** status
-     */
-    private val projectToBuild = ArrayList<MavenProject>()
-    /**
-     * Maven collected projects of the main one
-     */
-    private val targetProjectCollectedProjects = ArrayList<MavenProject>()
-
-    private var started = false
-
 
     @Throws(MojoExecutionException::class, MojoFailureException::class)
     override fun execute() {
-        log.debug("Executing PrintMojo on instance $this")
+        logMessage("Executing PrintMojo on instance $this", LOG_LEVEL.DEBUG, retrieveLoggingHolder())
         project.let {
             if (!started) {
                 init(it)
                 started = true
             }
-            MavenProjectVisitor.init(it).visit(CommonObjectHolder(repositorySystem, mavenProjectBuilder, session, project, targetProjectCollectedProjects, globalProjectRelationshipSet, outputDirectory, log))
+            MavenProjectVisitor.init(it).visitForPrint(
+                PrintObjectHolder(
+                    globalProjectRelationshipSet,
+                    retrieveCommonObjectHolder()
+                )
+            )
             projectToBuild.remove(it)
             if (projectToBuild.isEmpty()) {
                 started = false
-                when(outputFormat)  {
-                    "puml" -> PUMLWriter.writeRelationships(globalProjectRelationshipSet, outputDirectory, log)
+                when (outputFormat) {
+                    "puml" -> PUMLWriter.writeRelationships(globalProjectRelationshipSet, outputDirectory, retrieveLoggingHolder())
                     else -> throw MojoExecutionException("Unexpected output format $outputFormat")
                 }
             }
         }
-    }
-
-    /**
-     * Initialize the progress indicator and the collected projects containers
-     */
-    private fun init(mavenProject: MavenProject) {
-        log.debug("Init with ${mavenProject.name}")
-        projectToBuild.clear()
-        projectToBuild.addAll(mavenProject.collectedProjects)
-        targetProjectCollectedProjects.clear()
-        targetProjectCollectedProjects.addAll(mavenProject.collectedProjects)
-        targetProjectCollectedProjects.add(mavenProject)
     }
 
 }
